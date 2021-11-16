@@ -1,90 +1,120 @@
-var version = 0.1
-export function print(data) { console.log(data) }
-export class Less{
-    constructor(DOCUMENT){
-        this.document = DOCUMENT
-        this.less=[]
+var version = 0.2
+export class LessJs{
+    constructor(){
+        this.document = document
+        this.elements={}
         this.data = {}
         this.events=[]
-        this.__on()
+        this.mountOn=this.document
+    }
+
+    q(lessName,elementIndex){
+        let elements = this.elements
+        let element = false
+        // check if given less name exists in less elements
+        if(lessName in elements){
+            let thisLessNameElements = elements[lessName]
+            if(thisLessNameElements.length == 1){
+                return thisLessNameElements[0]
+            }else{
+                if(elementIndex==undefined){
+                    console.error(thisLessNameElements)
+                    console.error(`${thisLessNameElements.length} were found with less name: ${lessName}, please use elementIndex`)
+                    return false
+                }else{
+                    element = elements[lessName][elementIndex]
+                }
+            }
+        }
+        return element
     }
     
-    run(Data){
-        // get all less tag from dom and run loop to get and insert data
-        let lessList = this.getAllByData('less')
-        lessList.forEach(e=>{
-
+    run(selector,Data){
+        // get all less tags from dom and run for loop to get and insert data
+        let mountOn = this.document.querySelector(selector)
+        this.mountOn=mountOn
+        console.log('LessJs running on ',mountOn)
+        let allLessTags = mountOn.querySelectorAll(`[less]`)
+        allLessTags.forEach(e=>{
             // less will always take inner value and replace less value if not the same
             let thisElement = e
-            let name_and_value = e.attributes['less']['value'].split(':')
-            let lessName = name_and_value[0]
-            let tagName = thisElement.tagName
-            let lessValue = this.__cleanStr(name_and_value[1])
-            let lessInner = thisElement.innerText 
-
-            // if Data from user is set and current less name in it set lessInner to that value
-            if(Data && lessName in Data){ lessInner=Data[lessName] }
-
-            // check if key name is empty if so return an error
+            let lessAttributes = thisElement.attributes['less']['value'].split(':')
+            let [lessName, lessValue, lessInner, tagName] = [lessAttributes[0], this.__cleanStr(lessAttributes[1]), thisElement.innerText, thisElement.tagName]
+            // check if key less name is empty, if so return an error
             if(lessName==''){
-                console.error(thisElement)
+                console.error(e)
                 console.error(`less name can not be empty, use less="keyName:KeyValue"`)
                 return
             }
-
-            // add less name attribute to current element
-            e.setAttribute(`l-${lessName}`,'')
-            // add current less to this.less if everything went good
-            this.less.push({ name:lessName,element:thisElement })
-
-            // if tag name is an input tag
-
-            if(tagName === 'INPUT'){
-                this.events.push({ type:'keyup',element:thisElement,tagName:tagName,lessName:lessName })
-                // if less name already in this.data use that data
-                if(lessName in this.data){
-                    e.value=this.data[lessName]
-                    e.attributes['less']['value']=[`${lessName}:${this.data[lessName]}`]
-                    return
-                }else{
-                    let inputValue = this.__cleanStr(e.value)
-                    // if input value is not empty set value on data and inner to input value
-                    if(inputValue !== ''){
-                        e.value=inputValue
-                        e.attributes['less']['value']=[`${lessName}:${this.__cleanStr(inputValue)}`]
-                        // change less value
-                        lessValue=this.__cleanStr(inputValue)
-                    }else{ // else use less value even if it is empty
-                        e.value=lessValue
-                        e.attributes['less']['value']=[`${lessName}:${lessValue}`]
+            // check if less value is empty if yes use inner value
+            if(tagName === 'INPUT' || tagName === 'TEXTAREA'){
+                if(lessValue==''){
+                    if(thisElement.value.length > 0){ 
+                        lessInner=this.__cleanStr(thisElement.value)
+                    }
+                }
+            }
+            else if(tagName == 'IMG' || tagName == 'IMAGE' || tagName == 'IFRAME' || tagName == 'VIDEO'){
+                lessInner = thisElement.getAttribute('src')
+            }
+            else if(tagName == 'A'){
+                lessInner = thisElement.getAttribute('href')
+            }
+            else{ // run un p,h2 and other tags
+                if(lessValue==''){
+                    if(lessInner.length > 0){
+                        lessInner=this.__cleanStr(lessInner)
                     }
                 }
             }
             
-            // if tag name is not an input tag
+            // check if current less name was given in Data, if yes use Data value for this less name value
+            if(Data){
+                // if current less name in given data use given data value
+                if(lessName in Data){ lessInner=Data[lessName] }
+            }
+            // else check if current less name was already assigned in this.data
+            else if(lessName in this.data){
+                lessInner=this.data[lessName]
+            }
 
+            // add less name attribute to current element, it will be use to get all less tags later on
+            thisElement.setAttribute(`l-${lessName}`,'')
+
+            // add current element to less elements list
+            let lessNameInLess = lessName in this.elements
+            if(lessNameInLess==false){
+                this.elements[lessName]=[]
+                this.elements[lessName].push(thisElement)
+            }else{
+                this.elements[lessName].push(thisElement)
+            }
+    
+            // run if current element tag name is equal to input or textarea
+            if(tagName === 'INPUT' || tagName === 'TEXTAREA'){
+                // add to events
+                this.events.push({ type:'keyup',element:thisElement,tagName:tagName,lessName:lessName })
+                // set attributes
+                thisElement.value=lessInner
+                thisElement.attributes['less']['value']=[`${lessName}:${lessInner}`]
+            }
+            else if(tagName == 'IMG' || tagName == 'IMAGE' || tagName == 'IFRAME' || tagName == 'VIDEO'){
+                thisElement.src=lessInner
+                thisElement.attributes['less']['value']=[`${lessName}:${lessInner}`]
+            }
+            else if(tagName == 'A'){
+                thisElement.href=lessInner
+                thisElement.attributes['less']['value']=[`${lessName}:${lessInner}`]
+            }
+            // else run on h1,p, and other elements tag names
             else{
-                // if less name already in this.data use that data
-                if(lessName in this.data){
-                    e.innerText=this.data[lessName]
-                    e.attributes['less']['value']=[`${lessName}:${this.data[lessName]}`]
-                    return
-                }else{
-                    // if less inner is not empty set this.data less name value to input
-                    if(lessInner !== ''){
-                        e.innerText=lessInner
-                        e.attributes['less']['value']=[`${lessName}:${this.__cleanStr(lessInner)}`]
-                        // change less value
-                        lessValue=this.__cleanStr(lessInner)
-                    }else{ // else use less value even if it is empty
-                        e.innerText=lessValue
-                        e.attributes['less']['value']=[`${lessName}:${lessValue}`]
-                    }
-                }
+                // set attributes
+                thisElement.innerText=lessInner
+                thisElement.attributes['less']['value']=[`${lessName}:${lessInner}`]   
             }
 
             // add current name and value to this.data if everything went good
-            this.data[lessName]=lessValue
+            this.data[lessName]=lessInner
             
         })// loop end here
 
@@ -97,59 +127,95 @@ export class Less{
             eventElement.addEventListener(eventType,(e)=>{
                 e.preventDefault()
                 // run on input elements
-                if(eventTagName === 'INPUT'){
-                    let eventInputValue = eventElement.value.trim()
+                if(eventTagName === 'INPUT' || eventTagName === 'TEXTAREA'){
+                    let eventInputValue = eventElement.value
                     // change inputs value
                     let eventLessLists = this.getAllByData(`l-${eventLessName}`)
                     eventLessLists.forEach(input=>{
                         input.value=eventInputValue
                         input.attributes['less']['value']=[`${eventLessName}:${this.__cleanStr(eventInputValue)}`]
+                        this.data[eventLessName]=this.__cleanStr(eventInputValue)
+                    })
+                    // update other elements not input or textarea
+                    this.getAllByData(`l-${eventLessName}`).forEach(e=>{
+                        let eTagName=e.tagName
+                        // only run if tag name is not input or textarea
+                        if(!['TEXTAREA','INPUT'].includes(eTagName)){
+                            e.innerText=eventInputValue
+                            e.attributes['less']['value']=[`${eventLessName}:${this.__cleanStr(eventInputValue)}`]
+                        }
                     })
                 }
             })
-
         })// events loop end here
 
     }
 
-
-    // update
+    // ---- update ----
     update(less_name,new_value){
-        if(less_name == undefined){
-            console.error('Missing less name on .update() ') ; return
-        }
-        if(new_value == undefined){
-            console.error('Missing new value on .update() ') ; return
-        }
-        let found=false
-        // check if name exists in this.data
-        if(less_name in this.data){ found=true }
-        // if found change
-        if(found){
-            let oldValue = this.data[less_name]
-            // only run is values are different
-            if(oldValue !== new_value){
-                // change inputs value
-                let LessLists = this.getAllByData(`l-${less_name}`)
-                LessLists.forEach(el=>{
-                    el.innerText=new_value
-                    el.attributes['less']['value']=[`${less_name}:${this.__cleanStr(new_value)}`]
-                })// loop end
-                // update this.data
-                this.data[less_name]=this.__cleanStr(new_value)
-            }
+        if(less_name == undefined){ console.error('Missing less name on .update() ') ; return }
+        if(new_value == undefined){ console.error('Missing new value on .update() ') ; return }
+        let lessNameFound = less_name in this.data
+        if(lessNameFound){
+            // get all less tags from dom and change it values for given one
+            let LessLists = this.mountOn.querySelectorAll(`[l-${less_name}]`)
+            LessLists.forEach(el=>{
+                let [thisElement,tagName] = [el,el.tagName]
+                if(tagName == 'INPUT' || tagName == 'TEXTAREA'){
+                    thisElement.value=new_value
+                    thisElement.attributes['less']['value']=[`${less_name}:${this.__cleanStr(new_value)}`]
+                }else if(tagName == 'IMG' || tagName == 'IMAGE' || tagName == 'IFRAME' || tagName == 'VIDEO'){
+                    thisElement.src=new_value
+                    thisElement.attributes['less']['value']=[`${less_name}:${this.__cleanStr(new_value)}`]
+                }
+                else if(tagName == 'A'){
+                    thisElement.href=new_value
+                    thisElement.attributes['less']['value']=[`${less_name}:${this.__cleanStr(new_value)}`]
+                }
+                else{
+                    thisElement.innerText=new_value
+                    thisElement.attributes['less']['value']=[`${less_name}:${this.__cleanStr(new_value)}`]
+                }
+            })
+            // update this.data
+            this.data[less_name]=this.__cleanStr(new_value)
         }else{
-            console.error(`Less name >> ${less_name} << not found`)
-            return
+            console.error(`Less name >> ${less_name} << not found`) ; return
         }
-
     }
 
-
-
-    // these are javascript functions with sugar on them ------------------
+    // ---- these are javascript functions with sugar on them ----
+    async uploadFiles(fileInput,url){
+        // make sure fetch response return status:false or True, fileName:img.png and filePath:filepath.png
+        // this function will return list of files upload on a promise
+        let filesUploaded=[]
+        if(!fileInput){ console.error('Images required on .uploadFiles()') }
+        // upload
+        for(let file of fileInput.files){
+            let fileData = new FormData()
+            // new FormData().append()
+            fileData.append('file',file)
+            let fetchReq = await fetch(url,{method:'POST',body:fileData})
+            let fetchRes = await fetchReq.json()
+            if(fetchRes['status']){
+                filesUploaded.push({filePath:fetchRes['filePath'],fileName:fetchRes['fileName']})
+            }
+        }
+        return filesUploaded
+    }
+    filesPreviewUrl(fileInput){
+        let filePaths=[]
+        for(let file of fileInput.files){
+            filePaths.push(window.URL.createObjectURL(file))
+        }
+        return filePaths
+    }
     async get(url){
         let res = await fetch(url,{ method:'GET'})
+        let result = await res.json() ; return result
+    }
+    async post(url,data){
+        let res = await fetch(url,{method:'POST',body:JSON.stringify(data),headers: {'Content-Type': 'application/json'}})
         let result = await res.json() ; return result
     }
     newElement(tagName,classNames){
@@ -171,7 +237,6 @@ export class Less{
         if(!className){ className='active' }
         element.classList.toggle(className)
     }
-
     addClass(element,className){ 
         if(!className){
             console.error('addClass() className can not be empty')
@@ -179,54 +244,34 @@ export class Less{
         }
         element.classList.add(className)
     }
-
     removeClass(element,className){ element.classList.remove(className) }
-
-    getByLess(less_name){
-        let lessElement = this.getByData(`l-${less_name}`)
-        if(lessElement){ return lessElement }
-        else{
-            console.error(`Less name >> ${less_name} << not found`) ; return
-        }
-    }
-    getAllByLess(less_name){
-        let lessElement = this.getAllByData(`l-${less_name}`)
-        if(lessElement){ return lessElement }
-        else{
-            console.error(`Less name >> ${less_name} << not found`) ; return
-        }
-    }
-
     getById(_id){
         let element = this.document.getElementById(_id)
-        if(!element){ return false}
         return element
     }
     getAllById(_id){
-        let element = this.document.querySelectorAll(_id)
-        if(!element){ return false}
+        let element = this.document.querySelectorAll(`#${_id}`)
+        
         return element
     }
     getByClass(_className){
         let element = this.document.querySelector(`.${_className}`)
-        if(!element){ return false}
         return element
     }
     getAllByClass(_className){
         let element = this.document.querySelectorAll(`.${_className}`)
-        if(!element){ return false}
         return element
     }
     getByData(_dataName){
         let element = this.document.querySelector(`[${_dataName}]`)
-        if(!element){ return false}
         return element
     }
     getAllByData(_dataName){
         let element = this.document.querySelectorAll(`[${_dataName}]`)
-        if(!element){ return false}
         return element
     }
+
+    // ---- these are utilities functions ----
     __cleanStr(data){
         if(typeof data == 'number'){ return data }
         if(data==''){ return ''}
@@ -241,47 +286,4 @@ export class Less{
         else{ return parseInt(data)}
     }
 
-
-    __on(){
-        Element.prototype.onClick = function(_function){
-            this.addEventListener('click',_function)
-        }
-        Element.prototype.onInputChange = function(_function,liveUpdate=false){
-            this.addEventListener('keyup',_function)
-            if(liveUpdate){
-                print(liveUpdate)
-            }
-        }
-    }
-    
 }
-
-
-
-
-
-
-
-        // check when inner text change
-        // let observer = new MutationObserver(mutationRecords => {
-        //     mutationRecords.forEach(m=>{
-        //         let mElement = m.target.parentElement
-        //         let mOldValue = m.oldValue
-        //         let mNewValue = m.target.data
-        //         print(mElement)
-        //         let name_and_value = mElement.attributes['less']['value'].split(':')
-        //         let lessName = name_and_value[0]
-        //         let lessValue = this.__cleanStr(name_and_value[1])
-        //         print(this.data)
-        //         print(lessName in this.data)    
-        //     })
-        // });
-        // // observe everything except attributes
-        // observer.observe(document, {
-        //     childList: true, // observe direct children
-        //     subtree: true, // and lower descendants too
-        //     characterDataOldValue: true, // pass old data to callback
-        //     attributeFilter: ['attr1', 'attr2'],
-        //     attributes: true
-        // })
-        // check when inner text change end here

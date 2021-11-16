@@ -1,10 +1,12 @@
-import {Less} from './lessjs/less.js'
-let less = new Less(document)
+import { LessJs } from './lessJs/less.js'
+const test = document.getElementById('test')
 
-let siteName = 'LessJs'
-let currentVersion = 0.2
+const Test = new LessJs() ; Test.run('#testImg')
 
-less.run({
-    homePageTitle:siteName,
-    version:currentVersion
+test.addEventListener('click',()=>{
+    // let newTitle = document.querySelector('#newTitle').value
+    // Head.update('title',newTitle)
+    console.log(Test.data)
+    Test.update('profileImage','/bag2.jpeg')
+    Test.update('homeUrl','/home2')
 })

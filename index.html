@@ -4,11 +4,32 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LessJs | Write less javascript</title>
+    <title less='title:'>LessJs | Write less javascript</title>
 </head>
+
 <body>
-    <h1>Welcome to <span less='homePageTitle:'></span></h1>   
-    <b less='version:0.1'></b>
+    <div id="app">
+        <div id="testImg">
+            <img src="./bag.webp" alt="bag" style="width: 200px;" less='profileImage:'>
+            <img style="width: 200px;" less='profileImage:'>
+            <a href="/home" less='homeUrl:'></a>
+        </div>
+        <form id="newUser">
+            <div>
+                <label>Name</label>
+                <input type="text"  less="name:" value="anthony">
+            </div>
+            <div>
+                <label>Last name</label>
+                <input type="text"  less="lastName:" value="duran">
+            </div>
+            <button less='submit:'>Submit</button>
+        </form>
+        <img src="" alt="">
+    </div>
+    <input type="text" less='newTitle:' id="newTitle">
+    <button id="test">Test</button>
+    
     <script type="module" src="/app.js"></script>
 </body>
 </html>
