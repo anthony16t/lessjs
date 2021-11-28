@@ -4,32 +4,34 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title less='title:'>LessJs | Write less javascript</title>
+    <title>LessJs | Write less javascript</title>
+    <link rel="stylesheet" href="/main.css">
 </head>
-
 <body>
     <div id="app">
-        <div id="testImg">
-            <img src="./bag.webp" alt="bag" style="width: 200px;" less='profileImage:'>
-            <img style="width: 200px;" less='profileImage:'>
-            <a href="/home" less='homeUrl:'></a>
+        <div class="mainHeader">
+            <div class="mainNav">
+                <h2 class="logo" less="siteTitle:">LessJs</h2>
+                <ul class="mainNavLinks">
+                    <a href="/" class="mainNavLink">Home</a>
+                    <a href="#/pages/about.html" class="mainNavLink">About</a>
+                    <a href="#/pages/contact.html" class="mainNavLink">Contact</a>
+                </ul>
+                <div class="mainNavUserZone">
+                    <img less="userImage:" src="/images/fakeUser.jpeg" alt="User" class="mainNavUserImage">
+                </div>
+            </div>
         </div>
-        <form id="newUser">
-            <div>
-                <label>Name</label>
-                <input type="text"  less="name:" value="anthony">
+        <div class="content">
+            <!-- site title -->
+            <div class="label">
+                <label for="changeSiteName">Change site title</label>
+                <input type="text" id="changeSiteName" less="siteTitle:">
             </div>
-            <div>
-                <label>Last name</label>
-                <input type="text"  less="lastName:" value="duran">
-            </div>
-            <button less='submit:'>Submit</button>
-        </form>
-        <img src="" alt="">
+            <!-- change user image -->
+            <button class="btn" less-on="click:changeProfileImage">Change user img</button>
+        </div>
     </div>
-    <input type="text" less='newTitle:' id="newTitle">
-    <button id="test">Test</button>
-    
     <script type="module" src="/app.js"></script>
 </body>
 </html>

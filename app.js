@@ -1,12 +1,12 @@
-import { LessJs } from './lessJs/less.js'
-const test = document.getElementById('test')
+import LessJs from './modules/LessJs_0.0.3.js'
 
-const Test = new LessJs() ; Test.run('#testImg')
+const less = LessJs ; less.run('#app')
 
-test.addEventListener('click',()=>{
-    // let newTitle = document.querySelector('#newTitle').value
-    // Head.update('title',newTitle)
-    console.log(Test.data)
-    Test.update('profileImage','/bag2.jpeg')
-    Test.update('homeUrl','/home2')
-})
+// register functions to LessJS
+less.changeProfileImage = changeProfileImage
+
+// create function
+function changeProfileImage(e){
+    // change user image
+    less.update('userImage','/images/fakeUser2.jpeg')
+}

@@ -1,0 +1,11 @@
+$navBg:#f3f3f3;
+$navLinkColor:#fff;
+
+$linkColor:#7f60c7;
+$textColor:#383838;
+
+@mixin maxWidth {
+    max-width: 1500px;
+    width: 97%;
+    margin: auto;
+}
